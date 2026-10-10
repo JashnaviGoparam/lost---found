@@ -7,14 +7,15 @@
 "scripts": {
   "dev": "vite",
   "build": "vite build",
-  "start": "vite --host 0.0.0.0 --port $PORT"
-},
-
+  "start": "serve --single --listen $PORT dist"
+}
+,
   "dependencies": {
     "axios": "^1.20.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-router-dom": "^7.18.4",
+    "serve": "^14.2.6",
     "socket.io-client": "^4.8.4"
   },
   "devDependencies": {
