@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-
-const API_URL = "https://lost-found-backend-production-02a1.up.railway.app";
+import { apiRequest } from "../config";
 
 function Register() {
     const navigate = useNavigate();
@@ -16,24 +15,24 @@ function Register() {
     });
 
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
 
     const handleChange = (e) => {
         setFormData({
             ...formData,
             [e.target.name]: e.target.value
         });
+        setError("");
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
+        setError("");
 
         try {
-            const response = await fetch(`${API_URL}/api/register`, {
+            await apiRequest("/api/register", {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
                 body: JSON.stringify({
                     name: formData.name.trim(),
                     roll_number: formData.rollNumber.trim(),
@@ -44,17 +43,11 @@ function Register() {
                 })
             });
 
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.message || "Registration failed");
-            }
-
             alert("Registration successful! Please log in.");
             navigate("/login");
         } catch (error) {
             console.error("Registration error:", error);
-            alert(error.message || "Could not connect to the server.");
+            setError(error.message || "Could not connect to the server.");
         } finally {
             setLoading(false);
         }
@@ -74,6 +67,7 @@ function Register() {
                         placeholder="Enter full name"
                         value={formData.name}
                         onChange={handleChange}
+                        maxLength={100}
                         required
                     />
 
@@ -84,6 +78,7 @@ function Register() {
                         placeholder="Enter roll number"
                         value={formData.rollNumber}
                         onChange={handleChange}
+                        maxLength={50}
                         required
                     />
 
@@ -94,6 +89,7 @@ function Register() {
                         placeholder="Enter email"
                         value={formData.email}
                         onChange={handleChange}
+                        maxLength={100}
                         required
                     />
 
@@ -104,6 +100,7 @@ function Register() {
                         placeholder="Enter phone number"
                         value={formData.phone}
                         onChange={handleChange}
+                        maxLength={15}
                     />
 
                     <label>Branch</label>
@@ -132,6 +129,8 @@ function Register() {
                         minLength={8}
                         required
                     />
+
+                    {error && <p role="alert" style={{ color: "red" }}>{error}</p>}
 
                     <button type="submit" disabled={loading}>
                         {loading ? "Registering..." : "Register"}

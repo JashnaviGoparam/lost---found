@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-
-const API_URL = "https://lost-found-backend-production-02a1.up.railway.app";
+import { apiRequest } from "../config";
 
 function Login() {
     const navigate = useNavigate();
@@ -15,26 +14,21 @@ function Login() {
         setLoading(true);
 
         try {
-            const response = await fetch(`${API_URL}/api/login`, {
+            const data = await apiRequest("/api/login", {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
                 body: JSON.stringify({
                     email: email.trim().toLowerCase(),
                     password
                 })
             });
 
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.message || "Invalid email or password!");
+            if (data.user?.role !== "student" || !data.token) {
+                throw new Error("Student login could not be verified.");
             }
 
             const loggedInStudent = {
                 ...data.user,
-                role: data.user?.role || "student"
+                role: "student"
             };
 
             localStorage.setItem(
@@ -42,9 +36,7 @@ function Login() {
                 JSON.stringify(loggedInStudent)
             );
 
-            if (data.token) {
-                localStorage.setItem("token", data.token);
-            }
+            localStorage.setItem("token", data.token);
 
             alert("Login successful!");
             navigate("/student-dashboard");
@@ -92,6 +84,10 @@ function Login() {
                 <p>
                     Don't have an account?{" "}
                     <Link to="/register">Register</Link>
+                </p>
+
+                <p>
+                    <Link to="/reset-password">Forgot your password?</Link>
                 </p>
 
                 <p>

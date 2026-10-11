@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { apiRequest } from "../config";
 
 function AdminLogin() {
 
@@ -7,36 +8,42 @@ function AdminLogin() {
 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
 
-    const handleLogin = (e) => {
-
+    const handleLogin = async (e) => {
         e.preventDefault();
+        setLoading(true);
+        setError("");
 
-        if (
-            email === "admin@mits.ac.in" &&
-            password === "MITS@2026"
-        ) {
+        try {
+            const data = await apiRequest("/api/admin/login", {
+                method: "POST",
+                body: JSON.stringify({
+                    email: email.trim().toLowerCase(),
+                    password
+                })
+            });
 
-            const adminUser = {
-                id: "admin",
-                name: "MITS Admin",
-                email: "admin@mits.ac.in",
-                role: "admin"
-            };
+            if (data.user?.role !== "admin") {
+                setError("This account does not have admin access.");
+                return;
+            }
 
-            localStorage.setItem(
-                "loggedInUser",
-                JSON.stringify(adminUser)
-            );
+            if (!data.token) {
+                throw new Error("The server did not provide an authentication token.");
+            }
+
+            localStorage.setItem("loggedInUser", JSON.stringify(data.user));
+            localStorage.setItem("token", data.token);
 
             alert("Admin login successful!");
-
             navigate("/admin-dashboard");
-
-        } else {
-
-            alert("Invalid admin email or password!");
-
+        } catch (error) {
+            console.error("Admin login error:", error);
+            setError(error.message || "Unable to connect to the server.");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -61,9 +68,10 @@ function AdminLogin() {
                         type="email"
                         placeholder="Enter admin email"
                         value={email}
-                        onChange={(e) =>
-                            setEmail(e.target.value)
-                        }
+                        onChange={(e) => {
+                            setEmail(e.target.value);
+                            setError("");
+                        }}
                         required
                     />
 
@@ -75,16 +83,22 @@ function AdminLogin() {
                         type="password"
                         placeholder="Enter admin password"
                         value={password}
-                        onChange={(e) =>
-                            setPassword(e.target.value)
-                        }
+                        onChange={(e) => {
+                            setPassword(e.target.value);
+                            setError("");
+                        }}
                         required
                     />
 
-                    <button type="submit">
-                        Admin Login
+                    <button type="submit" disabled={loading}>
+                        {loading ? "Logging in..." : "Admin Login"}
                     </button>
 
+                    {error && (
+                        <p role="alert" style={{ color: "red" }}>
+                            {error}
+                        </p>
+                    )}
                 </form>
 
                 <p>
